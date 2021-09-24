@@ -9,56 +9,96 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.shaadisampleapp.R
-import com.example.shaadisampleapp.database.viewmodel.VideosTableViewModel
+import com.example.shaadisampleapp.database.viewmodel.MatchesTableViewModel
 import com.example.shaadisampleapp.network.api.ApiHelper
 import com.example.shaadisampleapp.network.api.RetrofitBuilder
+import com.example.shaadisampleapp.network.model.MatchesApiResponse
 import com.example.shaadisampleapp.network.model.Results
-import com.example.shaadisampleapp.network.model.VideosApiResponse
 import com.example.shaadisampleapp.ui.base.ViewModelFactory
 import com.example.shaadisampleapp.ui.main.adapter.MainAdapter
-import com.example.shaadisampleapp.ui.main.interfaces.VideoItemClickInterface
+import com.example.shaadisampleapp.ui.main.interfaces.MatchesItemClickInterface
 import com.example.shaadisampleapp.ui.main.viewmodel.MainViewModel
 import com.example.shaadisampleapp.utils.ConnectionUtil
+import com.example.shaadisampleapp.utils.Constants
 import com.example.shaadisampleapp.utils.Status
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), VideoItemClickInterface {
+class MainActivity : AppCompatActivity(), MatchesItemClickInterface {
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: MainAdapter
     private val uiScope = CoroutineScope(Dispatchers.Main)
-    private var videosTableViewModel: VideosTableViewModel? = null
-    private var videosApiResponse: VideosApiResponse? = null
-
+    private var matchesTableViewModel: MatchesTableViewModel? = null
+    private var matchesApiResponse: MatchesApiResponse? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupViewModel()
         setupUI()
+
         val connectionUtil: ConnectionUtil? = ConnectionUtil(this)
+        swipeRefresh?.isRefreshing = false
+        swipeRefresh?.setOnRefreshListener {
+            if (connectionUtil?.isOnline() == true) {
+                setupObservers()
+            } else {
+                if (matchesApiResponse == null || matchesApiResponse?.results?.isEmpty() == true) {
+                    progressBar?.visibility = View.GONE
+                    recyclerView?.visibility = View.GONE
+                    tvError?.visibility = View.VISIBLE
+                    tvError?.text = "No Internet connection!"
+                }
+                swipeRefresh?.isRefreshing = false
+            }
+        }
 
         if (connectionUtil?.isOnline() == true) {
             setupObservers()
         } else {
-            progressBar?.visibility = View.GONE
-            recyclerView?.visibility = View.GONE
-            tvError?.visibility = View.VISIBLE
-            tvError?.text = "No Internet connection!"
+            try {
+                uiScope.launch {
+                    matchesTableViewModel?.savedMatches?.collect { it ->
+                        if (it != null && it.isNotEmpty()) {
+                            matchesApiResponse = MatchesApiResponse(it as MutableList<Results?>?)
+                            recyclerView?.visibility = View.VISIBLE
+                            progressBar?.visibility = View.GONE
+                            tvError?.visibility = View.GONE
+                            retrieveList(
+                                matchesApiResponse?.results
+                            )
+                        } else {
+                            progressBar?.visibility = View.GONE
+                            recyclerView?.visibility = View.GONE
+                            tvError?.visibility = View.VISIBLE
+                            tvError?.text = "No Internet connection!"
+                        }
+                    }
+                }
+            } catch (ex: Exception) {
+                progressBar?.visibility = View.GONE
+                recyclerView?.visibility = View.GONE
+                tvError?.visibility = View.VISIBLE
+                tvError?.text = "No Internet connection!"
+            }
         }
+
         ConnectionUtil(this).onInternetStateListener(object :
             ConnectionUtil.ConnectionStateListener {
             override fun onAvailable(isAvailable: Boolean) {
                 uiScope.launch {
                     if (isAvailable) {
-                        if (videosApiResponse == null) {
+                        if (matchesApiResponse == null || matchesApiResponse?.results?.isEmpty() == true) {
                             setupObservers()
                         }
                     } else {
-                        if (videosApiResponse == null) {
+                        if (matchesApiResponse == null || matchesApiResponse?.results?.isEmpty() == true) {
                             progressBar?.visibility = View.GONE
                             recyclerView?.visibility = View.GONE
                             tvError?.visibility = View.VISIBLE
@@ -75,9 +115,9 @@ class MainActivity : AppCompatActivity(), VideoItemClickInterface {
             ViewModelProvider(this, ViewModelFactory(ApiHelper(RetrofitBuilder.apiService))).get(
                 MainViewModel::class.java
             )
-        videosTableViewModel =
-                ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-                    .create(VideosTableViewModel::class.java)
+        matchesTableViewModel =
+            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+                .create(MatchesTableViewModel::class.java)
     }
 
     //initialising the adapter
@@ -95,7 +135,8 @@ class MainActivity : AppCompatActivity(), VideoItemClickInterface {
 
     //observing the response from the api
     private fun setupObservers() {
-        viewModel.getVideos(results = 10)
+        swipeRefresh?.isEnabled = false
+        viewModel.getMatches(results = 10)
             .observe(this, Observer {
                 it?.let { resource ->
                     when (resource.status) {
@@ -103,10 +144,14 @@ class MainActivity : AppCompatActivity(), VideoItemClickInterface {
                             recyclerView?.visibility = View.VISIBLE
                             progressBar?.visibility = View.GONE
                             tvError?.visibility = View.GONE
-                            resource.data?.let { videosResponse: VideosApiResponse ->
-                                this.videosApiResponse = videosResponse
+                            resource.data?.let { it ->
+                                this.matchesApiResponse = it
+                                uiScope.launch {
+                                    matchesTableViewModel?.nukeTable(SimpleSQLiteQuery("VACUUM"))
+                                    matchesTableViewModel?.insertAllItem(matchesApiResponse?.results as List<Results?>?)
+                                }
                                 retrieveList(
-                                    videosResponse.results
+                                    matchesApiResponse?.results
                                 )
                             }
                         }
@@ -124,6 +169,8 @@ class MainActivity : AppCompatActivity(), VideoItemClickInterface {
                         }
                     }
                 }
+                swipeRefresh?.isRefreshing = false
+                swipeRefresh?.isEnabled = true
             })
     }
 
@@ -136,16 +183,26 @@ class MainActivity : AppCompatActivity(), VideoItemClickInterface {
         }
     }
 
-    //click listener for recyclerview item
-    override fun onItemClick(result: Results?) {
+    override fun onMatchStatusChange(result: Results?, status: String?, pos: Int) {
         uiScope.launch {
-            videosTableViewModel?.insertItem(result)
-            Toast.makeText(
-                this@MainActivity,
-                result?.nat + " is now saved in database",
-                Toast.LENGTH_LONG
-            ).show()
+            matchesTableViewModel?.updateMatchStatus(result?.email, status)
+            result?.matchStatus = status
+            adapter.notifyItemChanged(pos, result)
+            when(status){
+                Constants.PROFILE_ACCEPTED -> {
+                    Toast.makeText(
+                        this@MainActivity, "You have accepted ${result?.name?.first}'s request",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                Constants.PROFILE_DECLINED -> {
+                    Toast.makeText(
+                        this@MainActivity, "You have declined ${result?.name?.first}'s request",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         }
-        Log.d("onItemClick", "Clicked on Saved history item")
+        Log.d("onMatchStatusChange", "Clicked on Saved history item")
     }
 }

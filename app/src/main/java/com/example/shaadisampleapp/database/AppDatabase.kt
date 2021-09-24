@@ -4,13 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.shaadisampleapp.database.dao.VideosDao
+import com.example.shaadisampleapp.database.dao.MatchesDao
 import com.example.shaadisampleapp.network.model.Results
 import com.example.shaadisampleapp.utils.DBConstants
 
 @Database(entities = [Results::class], version = 1)
 abstract class AppDatabase: RoomDatabase() {
-    abstract fun videosDao(): VideosDao?
+    abstract fun matchesDao(): MatchesDao?
+
     companion object{
         private var INSTANCE: AppDatabase? = null
 

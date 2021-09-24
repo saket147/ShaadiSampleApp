@@ -8,10 +8,10 @@ import kotlinx.coroutines.Dispatchers
 
 class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
 
-    fun getVideos(results: Int?) = liveData(Dispatchers.IO) {
+    fun getMatches(results: Int?) = liveData(Dispatchers.IO) {
         emit(Resource.loading(data = null))
         try {
-            emit(Resource.success(data = mainRepository.getVideos(results)))
+            emit(Resource.success(data = mainRepository.getMatches(results)))
         } catch (exception: Exception) {
             emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
         }

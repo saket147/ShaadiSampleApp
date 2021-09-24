@@ -3,15 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardLayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginBottom="8dp"
+    android:layout_height="match_parent"
+    android:layout_margin="8dp"
     android:elevation="4dp"
     app:cardCornerRadius="8dp"
     app:strokeColor="#e8e8e8"
-    app:strokeWidth=".2dp">
+    app:rippleColor="@android:color/transparent"
+    app:strokeWidth=".4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -19,9 +17,10 @@
         android:orientation="vertical">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/videoThumbnailImg"
+            android:id="@+id/matchImg"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="80dp"
             android:adjustViewBounds="true"
             android:background="@drawable/thumbnail_placeholder"
             android:scaleType="fitXY"
@@ -29,47 +28,105 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.example.shaadisampleapp.customviews.CircleImageView
-            android:id="@+id/artistImgView"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:padding="8dp"
-            android:src="@drawable/user_placeholder"
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="80dp"
+            android:background="@drawable/thumbnail_placeholder"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/videoThumbnailImg" />
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivDecline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_white_circle"
+            android:elevation="48dp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="18dp"
+            app:layout_constraintBottom_toBottomOf="@id/matchImg"
+            app:layout_constraintEnd_toStartOf="@id/ivAccept"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/matchImg"
+            app:srcCompat="@drawable/ic_baseline_close_24" />
 
         <TextView
-            android:id="@+id/videoTitleTv"
+            android:id="@+id/tvDecline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_medium"
+            android:foreground="?attr/selectableItemBackground"
+            android:padding="4dp"
+            android:text="Decline"
+            android:textColor="@color/gray_dark"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@id/ivDecline"
+            app:layout_constraintStart_toStartOf="@id/ivDecline"
+            app:layout_constraintTop_toBottomOf="@id/ivDecline" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/ivAccept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_voilet_circle"
+            android:elevation="48dp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:padding="20dp"
+            app:layout_constraintBottom_toBottomOf="@id/matchImg"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ivDecline"
+            app:layout_constraintTop_toBottomOf="@id/matchImg"
+            app:srcCompat="@drawable/ic_baseline_thumb_up_24" />
+
+        <TextView
+            android:id="@+id/tvAccept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter_medium"
+            android:foreground="?attr/selectableItemBackground"
+            android:padding="4dp"
+            android:text="Accept"
+            android:textColor="@color/gray_dark"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@id/ivAccept"
+            app:layout_constraintStart_toStartOf="@id/ivAccept"
+            app:layout_constraintTop_toBottomOf="@id/ivAccept" />
+
+        <TextView
+            android:id="@+id/tvName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:fontFamily="@font/inter_semibold"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
+            android:layout_marginEnd="16dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/inter_bold"
+            android:maxLines="2"
+            android:text="Abhinav K"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toTopOf="@id/tvDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/artistImgView"
-            app:layout_constraintTop_toTopOf="@id/artistImgView" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
-            android:id="@+id/artistNameTv"
+            android:id="@+id/tvDetails"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
             android:ellipsize="end"
-            android:fontFamily="@font/inter_regular"
+            android:fontFamily="@font/inter_semibold"
             android:gravity="center_vertical"
             android:includeFontPadding="false"
             android:paddingBottom="10dp"
-            android:lines="1"
-            android:textColor="#BF000000"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="@id/videoTitleTv"
-            app:layout_constraintStart_toStartOf="@id/videoTitleTv"
-            app:layout_constraintTop_toBottomOf="@id/videoTitleTv" />
+            android:text="36 yrs, 6'11'' \n Lawyer"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf="@id/ivDecline"
+            app:layout_constraintEnd_toEndOf="@id/tvName"
+            app:layout_constraintStart_toStartOf="@id/tvName" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
