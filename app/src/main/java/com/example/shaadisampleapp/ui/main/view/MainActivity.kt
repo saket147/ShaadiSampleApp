@@ -10,7 +10,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.shaadisampleapp.R
 import com.example.shaadisampleapp.database.viewmodel.MatchesTableViewModel
 import com.example.shaadisampleapp.network.api.ApiHelper
@@ -55,6 +54,7 @@ class MainActivity : AppCompatActivity(), MatchesItemClickInterface {
                     tvError?.visibility = View.VISIBLE
                     tvError?.text = "No Internet connection!"
                 }
+                Toast.makeText(this, "No Internet connection!", Toast.LENGTH_SHORT).show()
                 swipeRefresh?.isRefreshing = false
             }
         }
@@ -203,6 +203,6 @@ class MainActivity : AppCompatActivity(), MatchesItemClickInterface {
                 }
             }
         }
-        Log.d("onMatchStatusChange", "Clicked on Saved history item")
+        Log.d("onMatchStatusChange", "Clicked on Saved history item  $status")
     }
 }
